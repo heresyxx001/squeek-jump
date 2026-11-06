@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>Squeek Jump</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Titan+One&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#14273d;
+    --ink-soft:#3d5875;
+    --page:#dceef7;
+    --page-2:#fdeeda;
+    --card:#ffffff;
+    --card-line:#c9dde9;
+    --accent:#ff6b35;
+    --accent-dark:#e04e1a;
+    --teal:#0e7c86;
+    --teal-dark:#0a5f67;
+    --navy:#12314f;
+    --gold:#ffb703;
+    --red:#d64541;
+    --ok:#1a936f;
+    --shadow:0 10px 28px rgba(18,49,79,.16);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ink:#eef6fb;
+      --ink-soft:#a9c2d6;
+      --page:#0d2036;
+      --page-2:#17293f;
+      --card:#16283f;
+      --card-line:#2a435f;
+      --shadow:0 10px 28px rgba(0,0,0,.4);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Outfit",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(180deg,var(--page) 0%,var(--page-2) 100%);
+    min-height:100vh;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:18px 14px 34px}
+  /* ---------- Title ---------- */
+  .title-block{text-align:center;padding:6px 0 2px}
+  h1{
+    font-family:"Titan One",system-ui,sans-serif;
+    font-size:clamp(2.3rem,8vw,3.4rem);
+    line-height:1;
+    margin:0;
+    letter-spacing:.5px;
+    color:var(--navy);
+  }
+  @media (prefers-color-scheme: dark){ h1{color:#ffd9a0} }
+  h1 .jump{color:var(--accent)}
+  .tagline{margin:6px 0 0;font-size:1rem;color:var(--ink-soft);font-weight:500}
+  /* ---------- Status bar ---------- */
+  .status-bar{
+    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;
+    margin:14px 0 10px;
+  }
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;
+    background:var(--card);border:1.5px solid var(--card-line);
+    border-radius:999px;padding:6px 13px;font-size:.85rem;font-weight:700;
+    box-shadow:0 2px 8px rgba(18,49,79,.08);
+  }
+  .dot{width:9px;height:9px;border-radius:50%;background:#9fb3c4;flex:none}
+  .dot.on{background:var(--ok);box-shadow:0 0 0 4px rgba(26,147,111,.18)}
+  .dot.down{background:var(--red);box-shadow:0 0 0 4px rgba(214,69,65,.16)}
+  .dot.sim{background:var(--gold);box-shadow:0 0 0 4px rgba(255,183,3,.2)}
+  .chip.sim-chip{border-color:var(--gold);background:#fff6dd;color:#7a5200}
+  @media (prefers-color-scheme: dark){ .chip.sim-chip{background:#3a2f10;color:#ffd76a} }
+  /* ---------- Cards / screens ---------- */
+  .card{
+    background:var(--card);border:1.5px solid var(--card-line);
+    border-radius:18px;box-shadow:var(--shadow);padding:20px 18px;
+  }
+  .hidden{display:none !important}
+  /* ---------- Lobby ---------- */
+  .lobby h2{margin:0 0 4px;font-size:1.3rem;font-weight:800;text-align:center}
+  .lobby p.lead{margin:0 0 16px;text-align:center;color:var(--ink-soft);font-size:.97rem}
+  .choice-grid{display:grid;gap:12px}
+  @media (min-width:560px){ .choice-grid{grid-template-columns:1fr 1fr} }
+  .choice{
+    border:2px solid var(--card-line);border-radius:14px;padding:16px 14px;
+    text-align:left;background:transparent;color:var(--ink);cursor:pointer;
+    font-family:inherit;width:100%;
+  }
+  .choice:hover{border-color:var(--teal)}
+  .choice:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .choice .choice-title{font-size:1.08rem;font-weight:800;display:block;margin-bottom:4px}
+  .choice .choice-sub{font-size:.88rem;color:var(--ink-soft);display:block;line-height:1.4}
+  .choice.wallet{border-color:var(--navy)}
+  .choice.guest{border-color:var(--accent)}
+  .wallet-msg{
+    margin-top:14px;border-radius:12px;padding:12px 14px;font-size:.92rem;line-height:1.45;
+    display:none;
+  }
+  .wallet-msg.show{display:block}
+  .wallet-msg.error{background:#fdeceb;border:1.5px solid #f2b8b5;color:#7c1d1a}
+  .wallet-msg.ok{background:#e7f6f0;border:1.5px solid #a9dcc9;color:#0d5138}
+  @media (prefers-color-scheme: dark){
+    .wallet-msg.error{background:#3d1a18;color:#ffb4ae}
+    .wallet-msg.ok{background:#123128;color:#9fe3c6}
+  }
+  .wallet-msg button{
+    margin-top:8px;background:var(--accent);color:#fff;border:none;border-radius:9px;
+    padding:9px 16px;font-weight:800;font-family:inherit;cursor:pointer;font-size:.92rem;
+  }
+  .howto{margin:16px 0 0;font-size:.9rem;color:var(--ink-soft);text-align:center;line-height:1.5}
+  /* ---------- Game frame ---------- */
+  .game-shell{position:relative;border-radius:18px;overflow:hidden;box-shadow:var(--shadow);border:1.5px solid rgba(18,49,79,.25);background:#f59e4c}
+  canvas{display:block;width:100%;height:auto;touch-action:manipulation}
+  .overlay{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:10px 14px;background:rgba(10,28,46,.55);color:#fff;z-index:5;overflow:hidden;
+  }
+  .overlay h2{font-family:"Titan One",sans-serif;font-size:clamp(1.35rem,5.5vw,2.3rem);margin:0 0 4px;letter-spacing:.5px}
+  .overlay p{margin:0 0 5px;font-size:.94rem;line-height:1.38;max-width:420px}
+  .overlay .big-score{font-family:"Titan One",sans-serif;font-size:clamp(1.8rem,7vw,3rem);color:var(--gold);line-height:1.1}
+  .overlay .mode-line{font-weight:700;font-size:.82rem;letter-spacing:.4px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);padding:3px 11px;border-radius:999px;margin-bottom:7px}
+  .overlay .btn{padding:11px 18px;font-size:.98rem}
+  @media (max-width:520px){
+    .overlay p{font-size:.86rem}
+    .overlay .btn{padding:9px 16px}
+  }
+  .overlay.feeddown{background:rgba(90,16,12,.72)}
+  /* ---------- HUD ---------- */
+  .hud{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;
+  }
+  @media (max-width:520px){ .hud{grid-template-columns:repeat(2,1fr)} }
+  .hud .cell{
+    background:var(--card);border:1.5px solid var(--card-line);border-radius:12px;
+    padding:8px 10px;text-align:center;min-width:0;
+  }
+  .hud .k{font-size:.68rem;font-weight:800;letter-spacing:1.2px;color:var(--ink-soft);text-transform:uppercase}
+  .hud .v{font-size:1.12rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hud .v.small{font-size:.95rem;padding-top:2px}
+  /* ---------- Controls ---------- */
+  .controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;align-items:stretch}
+  .btn{
+    border:none;border-radius:14px;font-family:inherit;font-weight:800;cursor:pointer;
+    padding:14px 20px;font-size:1.02rem;color:#fff;
+  }
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn-jump{flex:1 1 160px;background:var(--accent);font-size:1.3rem;letter-spacing:1px;box-shadow:0 5px 0 var(--accent-dark)}
+  .btn-jump:active{transform:translateY(3px);box-shadow:0 2px 0 var(--accent-dark)}
+  .btn-start{background:var(--teal);box-shadow:0 5px 0 var(--teal-dark)}
+  .btn-start:active{transform:translateY(3px);box-shadow:0 2px 0 var(--teal-dark)}
+  .btn-ghost{background:transparent;color:var(--ink);border:2px solid var(--card-line);box-shadow:none}
+  .sim-row{
+    margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:var(--card);border:1.5px dashed var(--gold);border-radius:12px;padding:10px 14px;
+  }
+  .sim-row .sim-text{font-size:.9rem;font-weight:600;flex:1 1 220px}
+  .sim-row .sim-text strong{letter-spacing:.3px}
+  .switch{position:relative;width:52px;height:30px;flex:none;background:none;border:none;padding:0;cursor:pointer}
+  .track{position:absolute;inset:0;background:#b9c9d6;border-radius:999px;transition:background .15s}
+  .track::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+  .switch[aria-checked="true"] .track{background:var(--gold)}
+  .switch[aria-checked="true"] .track::after{left:25px}
+  .switch:focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:999px}
+  .feed-note{margin-top:10px;font-size:.85rem;color:var(--ink-soft);text-align:center;line-height:1.5}
+  footer{margin-top:18px;text-align:center;font-size:.82rem;color:var(--ink-soft);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="title-block">
+    <h1>SQUEEK <span class="jump">JUMP</span></h1>
+    <p class="tagline">One button. One beach. Jump everything the sunset throws at you.</p>
+  </div>
+
+  <div class="status-bar" aria-live="polite">
+    <span class="chip"><span class="dot" id="feedDot"></span><span id="feedText">CHECKING FEED…</span></span>
+    <span class="chip" id="rpmChip">WHEEL&nbsp;<span id="rpmText">— RPM</span></span>
+    <span class="chip hidden" id="simChip"><span class="dot sim"></span>SIMULATED — NOT LIVE</span>
+  </div>
+
+  <!-- ============ LOBBY ============ -->
+  <section class="card lobby" id="lobbyScreen">
+    <h2>How do you want to play?</h2>
+    <p class="lead">Pick one to start. You can switch any time — your best score is kept separately for each mode, for this session only.</p>
+    <div class="choice-grid">
+      <button class="choice wallet" id="btnConnect" type="button">
+        <span class="choice-title">🔗 Connect Wallet</span>
+        <span class="choice-sub">Use your browser wallet (for example MetaMask). Read-only: we only show your address, shortened. No signature, no transaction, nothing is ever sent.</span>
+      </button>
+      <button class="choice guest" id="btnGuest" type="button">
+        <span class="choice-title">🏖️ Play as Guest</span>
+        <span class="choice-sub">No wallet, no sign-in. Jump straight in — you will play labeled as GUEST.</span>
+      </button>
+    </div>
+    <div class="wallet-msg" id="walletMsg" role="alert"></div>
+    <p class="howto">How to play: tap the beach, press <strong>Space</strong>, or hit <strong>JUMP</strong> to leap over rocks, crabs and driftwood. One hit ends the run. The faster the live Squeekchain wheel spins, the faster the obstacles come.</p>
+  </section>
+
+  <!-- ============ GAME ============ -->
+  <section id="gameScreen" class="hidden">
+    <div class="game-shell" id="gameShell">
+      <canvas id="gameCanvas" width="720" height="420" aria-label="Squeek Jump game area"></canvas>
+
+      <div class="overlay" id="readyOverlay">
+        <div class="mode-line" id="readyMode">GUEST</div>
+        <h2>READY?</h2>
+        <p>Tap, press Space, or hit JUMP to hop the obstacles. Survive as far as you can.</p>
+        <button class="btn btn-start" id="btnStart" type="button">▶ START RUN</button>
+        <p id="readyFeedNote" style="font-size:.8rem;opacity:.85;margin-top:5px"></p>
+      </div>
+
+      <div class="overlay feeddown hidden" id="feedDownOverlay">
+        <h2>⚠ FEED DOWN</h2>
+        <p>The live wheel feed is unreachable or stale, so the run is paused. Nothing is faked — play resumes when the feed is back.</p>
+        <p style="font-size:.84rem;opacity:.9">Retrying every 2 seconds… or turn on SIM MODE below to practice.</p>
+      </div>
+
+      <div class="overlay hidden" id="overOverlay">
+        <h2>WIPEOUT!</h2>
+        <div class="mode-line" id="overMode">GUEST</div>
+        <div class="big-score"><span id="overScore">0</span> m</div>
+        <p id="overBest">Best: 0 m</p>
+        <button class="btn btn-start" id="btnAgain" type="button">↻ RUN AGAIN</button>
+      </div>
+    </div>
+
+    <div class="hud">
+      <div class="cell"><div class="k">Score</div><div class="v" id="hudScore">0 m</div></div>
+      <div class="cell"><div class="k">Best</div><div class="v" id="hudBest">0 m</div></div>
+      <div class="cell"><div class="k">Playing as</div><div class="v small" id="hudMode">GUEST</div></div>
+      <div class="cell"><div class="k">Obstacle speed</div><div class="v small" id="hudSpeed">—</div></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-jump" id="btnJump" type="button">JUMP</button>
+      <button class="btn btn-ghost" id="btnChangeMode" type="button">Change mode</button>
+      <button class="btn btn-ghost hidden" id="btnDisconnect" type="button">Disconnect wallet</button>
+    </div>
+
+    <div class="sim-row">
+      <button class="switch" id="simToggle" type="button" role="switch" aria-checked="false" aria-label="Toggle SIM MODE">
+        <span class="track"></span>
+      </button>
+      <div class="sim-text"><strong>SIM MODE</strong> — practice with simulated wheel speed. Always labeled <strong>SIMULATED — NOT LIVE</strong>. Turn it off to play on the real live feed.</div>
+    </div>
+
+    <p class="feed-note" id="feedDetail">Live wheel: polling api.squeekchain.com every 2 seconds.</p>
+  </section>
+
+  <footer>
+    Obstacle speed follows the live Squeekchain wheel (RPM). If the feed drops, the game pauses instead of guessing.<br/>
+    Wallet connect is read-only address display — no signatures, no transactions, no keys stored.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= State ================= */
+  var API_URL = "https://api.squeekchain.com/v1/status";
+  var POLL_MS = 2000;
+
+  var feed = { state: "checking", rpm: 0, coreStatus: "—", freshness: "—" };
+  var simMode = false;
+  var simStart = Date.now();
+
+  var player = null; // {type:'guest'} or {type:'wallet', address, short}
+  var best = { guest: 0, wallet: 0 }; // in-memory, this session only
+
+  /* ================= DOM ================= */
+  function $(id){ return document.getElementById(id); }
+  var lobbyScreen = $("lobbyScreen"), gameScreen = $("gameScreen");
+  var feedDot = $("feedDot"), feedText = $("feedText"), rpmText = $("rpmText"), simChip = $("simChip");
+  var walletMsg = $("walletMsg");
+  var readyOverlay = $("readyOverlay"), feedDownOverlay = $("feedDownOverlay"), overOverlay = $("overOverlay");
+  var btnStart = $("btnStart"), btnAgain = $("btnAgain"), btnJump = $("btnJump");
+  var hudScore = $("hudScore"), hudBest = $("hudBest"), hudMode = $("hudMode"), hudSpeed = $("hudSpeed");
+  var feedDetail = $("feedDetail"), readyFeedNote = $("readyFeedNote");
+
+  /* ================= Feed ================= */
+  function simRpm(){
+    var t = (Date.now() - simStart) / 1000;
+    return Math.max(2, 15 + 11 * Math.sin(t / 9) + 4 * Math.sin(t / 3.7));
+  }
+  function effectiveRpm(){ return simMode ? simRpm() : feed.rpm; }
+  function feedIsUp(){ return simMode || feed.state === "online"; }
+
+  function renderFeed(){
+    if (simMode){
+      feedDot.className = "dot sim";
+      feedText.textContent = "SIM MODE";
+      simChip.classList.remove("hidden");
+      rpmText.textContent = simRpm().toFixed(1) + " RPM (sim)";
+      feedDetail.textContent = "SIM MODE is on — wheel speed is simulated for practice. This is not live data.";
+    } else {
+      simChip.classList.add("hidden");
+      if (feed.state === "online"){
+        feedDot.className = "dot on";
+        feedText.textContent = "LIVE";
+        rpmText.textContent = feed.rpm.toFixed(1) + " RPM";
+        feedDetail.textContent = "Live wheel: " + feed.rpm.toFixed(1) + " RPM · core " + feed.coreStatus + " · freshness " + feed.freshness + " · polled every 2s from api.squeekchain.com.";
+      } else if (feed.state === "down"){
+        feedDot.className = "dot down";
+        feedText.textContent = "FEED DOWN";
+        rpmText.textContent = "— RPM";
+        feedDetail.textContent = "FEED DOWN — the live wheel feed is unreachable or not fresh. Starts are paused and any run is frozen until it returns. Retrying every 2 seconds.";
+      } else {
+        feedDot.className = "dot";
+        feedText.textContent = "CHECKING FEED…";
+        rpmText.textContent = "— RPM";
+        feedDetail.textContent = "Live wheel: checking api.squeekchain.com…";
+      }
+    }
+    var up = feedIsUp();
+    btnStart.disabled = !up;
+    btnAgain.disabled = !up;
+    readyFeedNote.textContent = up ? "" : "Waiting for the live feed before you can start…";
+    hudSpeed.textContent = up ? speedLabel() : "Paused";
+  }
+
+  function speedLabel(){
+    var rpm = effectiveRpm();
+    if (rpm < 5) return "Gentle";
+    if (rpm < 14) return "Cruising";
+    if (rpm < 24) return "Fast";
+    return "Zooming!";
+  }
+  function speedPx(){
+    var rpm = effectiveRpm();
+    var s = 235 + rpm * 13;
+    return Math.min(680, Math.max(215, s));
+  }
+
+  function pollFeed(){
+    if (simMode){ renderFeed(); return; }
+    var ctrl = ("AbortController" in window) ? new AbortController() : null;
+    var timer = null;
+    if (ctrl){ timer = setTimeout(function(){ ctrl.abort(); }, 4500); }
+    fetch(API_URL, { cache: "no-store", signal: ctrl ? ctrl.signal : undefined })
+      .then(function(r){ if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .then(function(j){
+        if (timer) clearTimeout(timer);
+        var m = j.measurement || j.data || j;
+        var rpmMilli = (m.rpmMilli != null) ? m.rpmMilli : (j.rpmMilli != null ? j.rpmMilli : null);
+        var freshness = (m.freshness != null) ? m.freshness : j.freshness;
+        var coreStatus = (m.coreStatus != null) ? m.coreStatus : (j.coreStatus || "—");
+        if (rpmMilli == null || freshness == null) throw new Error("missing fields");
+        feed.rpm = Number(rpmMilli) / 1000;
+        feed.coreStatus = String(coreStatus);
+        feed.freshness = String(freshness);
+        feed.state = (String(freshness).toLowerCase() === "online") ? "online" : "down";
+        renderFeed();
+      })
+      .catch(function(){
+        if (timer) clearTimeout(timer);
+        feed.state = "down";
+        renderFeed();
+      });
+  }
+  setInterval(pollFeed, POLL_MS);
+  pollFeed();
+  setInterval(function(){ if (simMode) renderFeed(); }, 1000);
+
+  $("simToggle").addEventListener("click", function(){
+    simMode = !simMode;
+    $("simToggle").setAttribute("aria-checked", simMode ? "true" : "false");
+    if (simMode) simStart = Date.now();
+    renderFeed();
+    pollFeed();
+  });
+
+  /* ================= Wallet / Guest ================= */
+  function truncate(addr){ return addr.slice(0, 6) + "…" + addr.slice(-4); }
+  function modeKey(){ return player ? player.type : "guest"; }
+  function modeLabel(){ return !player ? "GUEST" : (player.type === "wallet" ? player.short : "GUEST"); }
+
+  function enterGame(){
+    lobbyScreen.classList.add("hidden");
+    gameScreen.classList.remove("hidden");
+    hudMode.textContent = modeLabel();
+    $("readyMode").textContent = modeLabel();
+    $("overMode").textContent = modeLabel();
+    hudBest.textContent = best[modeKey()] + " m";
+    $("btnDisconnect").classList.toggle("hidden", !(player && player.type === "wallet"));
+    resetRun();
+    showOverlay("ready");
+    renderFeed();
+  }
+  function backToLobby(){
+    stopRun();
+    player = null;
+    gameScreen.classList.add("hidden");
+    lobbyScreen.classList.remove("hidden");
+    walletMsg.className = "wallet-msg";
+    walletMsg.innerHTML = "";
+  }
+
+  $("btnGuest").addEventListener("click", function(){
+    player = { type: "guest" };
+    enterGame();
+  });
+
+  $("btnConnect").addEventListener("click", function(){
+    walletMsg.className = "wallet-msg";
+    walletMsg.innerHTML = "";
+    if (!window.ethereum || typeof window.ethereum.request !== "function"){
+      walletMsg.className = "wallet-msg show error";
+      walletMsg.innerHTML = "No wallet was found in this browser. Install a wallet such as MetaMask, then try again — or just play as a guest, no wallet needed." +
+        '<br/><button type="button" id="msgGuestBtn">Play as Guest instead</button>';
+      var b = $("msgGuestBtn");
+      if (b) b.addEventListener("click", function(){ player = { type: "guest" }; enterGame(); });
+      return;
+    }
+    window.ethereum.request({ method: "eth_requestAccounts" })
+      .then(function(accounts){
+        if (!accounts || !accounts.length) throw new Error("no accounts");
+        var addr = String(accounts[0]);
+        player = { type: "wallet", address: addr, short: truncate(addr) };
+        enterGame();
+      })
+      .catch(function(){
+        walletMsg.className = "wallet-msg show error";
+        walletMsg.innerHTML = "Wallet connection was cancelled or failed. Nothing was signed and nothing was sent. You can try again, or play as a guest." +
+          '<br/><button type="button" id="msgGuestBtn2">Play as Guest instead</button>';
+        var b2 = $("msgGuestBtn2");
+        if (b2) b2.addEventListener("click", function(){ player = { type: "guest" }; enterGame(); });
+      });
+  });
+
+  if (window.ethereum && window.ethereum.on){
+    window.ethereum.on("accountsChanged", function(accounts){
+      if (player && player.type === "wallet"){
+        if (!accounts || !accounts.length){ backToLobby(); }
+        else {
+          var addr = String(accounts[0]);
+          player = { type: "wallet", address: addr, short: truncate(addr) };
+          hudMode.textContent = modeLabel();
+          $("readyMode").textContent = modeLabel();
+          $("overMode").textContent = modeLabel();
+        }
+      }
+    });
+  }
+
+  $("btnDisconnect").addEventListener("click", backToLobby);
+  $("btnChangeMode").addEventListener("click", backToLobby);
+
+  /* ================= Game ================= */
+  var canvas = $("gameCanvas"), ctx = canvas.getContext("2d");
+  var W = 720, H = 420, GROUND = 318;
+
+  var game = {
+    state: "ready", // ready | playing | over
+    hamY: GROUND, vy: 0, grounded: true,
+    dist: 0, obstacles: [], spawnIn: 900,
+    runTime: 0, scroll: 0
+  };
+
+  function showOverlay(which){
+    readyOverlay.classList.toggle("hidden", which !== "ready");
+    overOverlay.classList.toggle("hidden", which !== "over");
+  }
+  function resetRun(){
+    game.state = "ready";
+    game.hamY = GROUND; game.vy = 0; game.grounded = true;
+    game.dist = 0; game.obstacles = []; game.spawnIn = 700; game.runTime = 0;
+    hudScore.textContent = "0 m";
+  }
+  function startRun(){
+    if (!feedIsUp()) return;
+    resetRun();
+    game.state = "playing";
+    showOverlay(null);
+  }
+  function stopRun(){
+    game.state = "ready";
+    feedDownOverlay.classList.add("hidden");
+  }
+  function endRun(){
+    game.state = "over";
+    var score = Math.floor(game.dist);
+    var k = modeKey();
+    if (score > best[k]) best[k] = score;
+    $("overScore").textContent = score;
+    $("overBest").textContent = "Best (" + modeLabel() + "): " + best[k] + " m";
+    $("overMode").textContent = modeLabel();
+    hudBest.textContent = best[k] + " m";
+    showOverlay("over");
+  }
+  function jump(){
+    if (game.state === "playing" && game.grounded && feedIsUp()){
+      game.vy = -860; game.grounded = false;
+    }
+  }
+
+  btnStart.addEventListener("click", startRun);
+  btnAgain.addEventListener("click", startRun);
+  btnJump.addEventListener("pointerdown", function(e){ e.preventDefault(); jump(); });
+  $("gameShell").addEventListener("pointerdown", function(e){
+    if (e.target.closest("button")) return;
+    jump();
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.code === "Space"){
+      if (!gameScreen.classList.contains("hidden")){
+        e.preventDefault();
+        if (game.state === "playing") jump();
+      }
+    }
+  });
+
+  /* ---- Obstacles ---- */
+  var OB_TYPES = ["rock", "crab", "wood"];
+  function spawnObstacle(){
+    var type = OB_TYPES[Math.floor(Math.random() * OB_TYPES.length)];
+    var o = { type: type, x: W + 50, w: 46, h: 34, phase: Math.random() * 6.28 };
+    if (type === "rock"){ o.w = 48; o.h = 36; }
+    if (type === "crab"){ o.w = 54; o.h = 30; }
+    if (type === "wood"){ o.w = 66; o.h = 24; }
+    game.obstacles.push(o);
+  }
+
+  /* ---- Drawing — realistic sunset beach ---- */
+  function furStrokes(cx, cy, rx, ry, n, colA, colB, seed){
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, 6.29); ctx.clip();
+    ctx.lineWidth = 0.9; ctx.lineCap = "round";
+    for (var i = 0; i < n; i++){
+      var a = ((i * 137.5 + seed * 61) % 360) * Math.PI / 180;
+      var rr = 0.25 + ((i * 37 + seed * 13) % 70) / 100;
+      var px = cx + Math.cos(a) * rx * rr;
+      var py = cy + Math.sin(a) * ry * rr;
+      var len = 3.2 + (i % 4);
+      ctx.strokeStyle = (i % 3 === 0) ? colB : colA;
+      ctx.globalAlpha = 0.16 + (i % 4) * 0.05;
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + len, py + len * 0.35); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawHamster(x, baseY, t){
+    var airborne = !game.grounded;
+    var playing = game.state === "playing";
+    var bob = game.grounded && playing ? Math.sin(t * 20) * 1.8 : 0;
+    var y = baseY + bob;
+    var heightAbove = Math.max(0, GROUND - baseY);
+    var runPhase = t * 22;
+    var swing = playing && game.grounded ? Math.sin(runPhase) : 0;
+    var swing2 = playing && game.grounded ? Math.cos(runPhase) : 0;
+    // body tilt: nose up on the way up, nose down on the way down = natural arc
+    var tilt = airborne ? Math.max(-0.22, Math.min(0.28, game.vy / 2600)) : (playing ? Math.sin(runPhase) * 0.03 : 0);
+
+    // —— dynamic shadow on the sand (shrinks + fades as he rises) ——
+    var shScale = 1 - Math.min(0.48, heightAbove / 240);
+    var shAlpha = 0.34 - Math.min(0.20, heightAbove / 700);
+    ctx.save();
+    ctx.fillStyle = "rgba(101,52,12," + Math.max(0.10, shAlpha) + ")";
+    ctx.beginPath(); ctx.ellipse(x + 4, GROUND + 11, 36 * shScale, 7.5 * shScale, 0, 0, 6.29); ctx.fill();
+    ctx.fillStyle = "rgba(101,52,12,0.12)";
+    ctx.beginPath(); ctx.ellipse(x + 4, GROUND + 11, 48 * shScale, 11 * shScale, 0, 0, 6.29); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(tilt);
+
+    // — far-side legs (darker, behind body) —
+    function leg(lx, ly, ang, len, col, pawCol){
+      ctx.save(); ctx.translate(lx, ly); ctx.rotate(ang);
+      var lg = ctx.createLinearGradient(0, 0, 0, len);
+      lg.addColorStop(0, col); lg.addColorStop(1, pawCol);
+      ctx.fillStyle = lg;
+      ctx.beginPath(); ctx.ellipse(0, len * 0.42, 5.2, len * 0.55, 0, 0, 6.29); ctx.fill();
+      // paw / foot
+      ctx.fillStyle = pawCol;
+      ctx.beginPath(); ctx.ellipse(3.2, len - 1, 6.4, 3.1, 0.15, 0, 6.29); ctx.fill();
+      ctx.strokeStyle = "rgba(90,45,15,.45)"; ctx.lineWidth = 0.7;
+      ctx.beginPath(); ctx.moveTo(5, len - 2.4); ctx.lineTo(5, len + 0.4); ctx.moveTo(8, len - 2); ctx.lineTo(8, len + 0.6); ctx.stroke();
+      ctx.restore();
+    }
+    if (airborne){
+      leg(-14, -10, 0.85, 13, "#8f4f1e", "#e8b98a");   // back leg trailing
+      leg(13, -12, -0.95, 12, "#8f4f1e", "#e8b98a");   // front leg reaching down-forward
+    } else if (playing){
+      leg(-14 + swing * 4, -9, swing * 0.75, 14, "#8f4f1e", "#e8b98a");
+      leg(13 - swing * 4, -10, -swing * 0.75, 13, "#8f4f1e", "#e8b98a");
+    } else {
+      leg(-14, -9, 0.12, 14, "#8f4f1e", "#e8b98a");
+      leg(13, -10, -0.08, 13, "#8f4f1e", "#e8b98a");
+    }
+
+    // — fluffy tail nub with highlight —
+    var tailG = ctx.createRadialGradient(-26, -22, 1, -25, -18, 9);
+    tailG.addColorStop(0, "#f6dcae"); tailG.addColorStop(1, "#c98a4a");
+    ctx.fillStyle = tailG;
+    ctx.beginPath(); ctx.arc(-25, -18, 7.5, 0, 6.29); ctx.fill();
+
+    // — body: volumetric gradient + darker saddle along the back (real hamster marking) —
+    var bodyG = ctx.createRadialGradient(-4, -38, 6, 0, -24, 34);
+    bodyG.addColorStop(0, "#eab26e"); bodyG.addColorStop(0.45, "#d18a3e");
+    bodyG.addColorStop(0.82, "#b96f27"); bodyG.addColorStop(1, "#9a5518");
+    ctx.fillStyle = bodyG;
+    ctx.beginPath(); ctx.ellipse(0, -24, 28.5, 24, -0.06, 0, 6.29); ctx.fill();
+    // saddle
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(0, -24, 28.5, 24, -0.06, 0, 6.29); ctx.clip();
+    ctx.fillStyle = "rgba(122,62,18,.38)";
+    ctx.beginPath(); ctx.ellipse(-3, -40, 24, 12, -0.1, 0, 6.29); ctx.fill();
+    // belly light
+    var bellyG = ctx.createRadialGradient(7, -14, 2, 7, -15, 18);
+    bellyG.addColorStop(0, "rgba(255,238,200,.95)"); bellyG.addColorStop(1, "rgba(255,238,200,0)");
+    ctx.fillStyle = bellyG;
+    ctx.beginPath(); ctx.ellipse(7, -15, 17, 12.5, 0, 0, 6.29); ctx.fill();
+    // sunset rim light on the back
+    ctx.strokeStyle = "rgba(255,178,92,.85)"; ctx.lineWidth = 2.2; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.ellipse(0, -24, 28.5, 24, -0.06, 3.55, 5.35); ctx.stroke();
+    ctx.restore();
+    furStrokes(0, -24, 28, 23.5, 42, "#7a3f10", "#ffe1a6", 3);
+
+    // — near-side legs (in front of belly, lighter) —
+    if (airborne){
+      leg(-17, -8, 0.55, 14, "#c97f36", "#f2c892");
+      leg(16, -10, -0.65, 13, "#c97f36", "#f2c892");
+    } else if (playing){
+      leg(-17 - swing * 4.5, -7, -swing * 0.8, 15, "#c97f36", "#f2c892");
+      leg(16 + swing * 4.5, -8, swing * 0.8, 14, "#c97f36", "#f2c892");
+      if (swing2 > 0.7){ /* dust puff at footfall */
+        ctx.fillStyle = "rgba(214,164,92,.35)";
+        ctx.beginPath(); ctx.ellipse(-6, 2, 10, 3.4, 0, 0, 6.29); ctx.fill();
+      }
+    } else {
+      leg(-17, -7, -0.06, 15, "#c97f36", "#f2c892");
+      leg(16, -8, 0.06, 14, "#c97f36", "#f2c892");
+    }
+
+    // — far ear (behind head) —
+    var earSweep = airborne ? -0.55 : (playing ? Math.sin(runPhase) * 0.08 - 0.08 : 0);
+    ctx.save(); ctx.translate(9, -53); ctx.rotate(earSweep - 0.15);
+    var earFar = ctx.createRadialGradient(0, -2, 1, 0, 0, 8);
+    earFar.addColorStop(0, "#a86424"); earFar.addColorStop(1, "#8a4c17");
+    ctx.fillStyle = earFar; ctx.beginPath(); ctx.arc(0, 0, 7.6, 0, 6.29); ctx.fill();
+    ctx.fillStyle = "#d98a7d"; ctx.beginPath(); ctx.arc(0.5, 0.5, 3.9, 0, 6.29); ctx.fill();
+    ctx.restore();
+
+    // — head: layered gradient, distinct muzzle + cheek —
+    var headG = ctx.createRadialGradient(15, -47, 3, 20, -38, 20);
+    headG.addColorStop(0, "#f0b978"); headG.addColorStop(0.55, "#d98f42"); headG.addColorStop(1, "#b96f27");
+    ctx.fillStyle = headG;
+    ctx.beginPath(); ctx.arc(20, -38, 17.5, 0, 6.29); ctx.fill();
+    furStrokes(20, -38, 17, 17, 26, "#8a4c17", "#ffe1a6", 7);
+    // cream muzzle / cheek pouch bulge
+    var cheekG = ctx.createRadialGradient(28, -33, 1, 28, -32, 10);
+    cheekG.addColorStop(0, "#fff0cd"); cheekG.addColorStop(1, "rgba(246,205,145,.15)");
+    ctx.fillStyle = cheekG;
+    ctx.beginPath(); ctx.ellipse(28.5, -32, 9, 7, 0.15, 0, 6.29); ctx.fill();
+    ctx.fillStyle = "rgba(255,240,205,.75)";
+    ctx.beginPath(); ctx.ellipse(18, -29.5, 8.5, 5.4, 0, 0, 6.29); ctx.fill();
+
+    // — near ear (detailed: fur rim + pink inner + shadow fold) —
+    ctx.save(); ctx.translate(25, -54); ctx.rotate(earSweep);
+    var earG = ctx.createRadialGradient(-1, -3, 1, 0, 0, 8.5);
+    earG.addColorStop(0, "#e09a4e"); earG.addColorStop(1, "#a86424");
+    ctx.fillStyle = earG; ctx.beginPath(); ctx.arc(0, 0, 8, 0, 6.29); ctx.fill();
+    var innerG = ctx.createRadialGradient(0, 1, 0.5, 0, 0, 5);
+    innerG.addColorStop(0, "#f6b8a6"); innerG.addColorStop(1, "#dd7f6f");
+    ctx.fillStyle = innerG; ctx.beginPath(); ctx.arc(0.4, 0.6, 4.6, 0, 6.29); ctx.fill();
+    ctx.strokeStyle = "rgba(122,62,18,.5)"; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.arc(0.4, 0.6, 4.6, 0.5, 2.4); ctx.stroke();
+    ctx.restore();
+
+    // — eye: glossy, iris + pupil + double highlight, upper lash line —
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath(); ctx.arc(25.5, -42.5, airborne ? 4.5 : 4.1, 0, 6.29); ctx.fill();
+    var irisG = ctx.createRadialGradient(25.5, -43.5, 0.5, 25.5, -42.5, 4.2);
+    irisG.addColorStop(0, "#6b3a12"); irisG.addColorStop(0.7, "#2b1608"); irisG.addColorStop(1, "#120802");
+    ctx.fillStyle = irisG;
+    ctx.beginPath(); ctx.arc(25.5, -42.5, airborne ? 4.1 : 3.8, 0, 6.29); ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(27, -44.2, 1.45, 0, 6.29); ctx.fill();
+    ctx.beginPath(); ctx.arc(24.2, -41, 0.7, 0, 6.29); ctx.fill();
+    ctx.strokeStyle = "rgba(70,32,6,.75)"; ctx.lineWidth = 1.1; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.arc(25.5, -43.2, 4.3, 3.6, 5.6); ctx.stroke();
+
+    // — nose, mouth, tooth, whiskers —
+    var noseG = ctx.createRadialGradient(36, -37.5, 0.4, 37, -36.5, 3.6);
+    noseG.addColorStop(0, "#ffb0a0"); noseG.addColorStop(1, "#d84f3e");
+    ctx.fillStyle = noseG;
+    ctx.beginPath(); ctx.ellipse(37, -36.5, 3.2, 2.4, 0, 0, 6.29); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.75)";
+    ctx.beginPath(); ctx.ellipse(36, -37.6, 1, 0.6, -0.4, 0, 6.29); ctx.fill();
+    ctx.strokeStyle = "#7a3c14"; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(34.5, -34.2); ctx.quadraticCurveTo(32.5, -32.2, 30.2, -33); ctx.stroke();
+    // little front tooth
+    ctx.fillStyle = "#fffdf4";
+    ctx.fillRect(29.2, -32.6, 2.6, 3.1);
+    ctx.strokeStyle = "rgba(122,60,20,.35)"; ctx.lineWidth = 0.6; ctx.strokeRect(29.2, -32.6, 2.6, 3.1);
+    // whiskers
+    ctx.strokeStyle = "rgba(255,250,235,.8)"; ctx.lineWidth = 0.75;
+    var wob = airborne ? 1.2 : Math.sin(t * 6) * 0.35;
+    ctx.beginPath();
+    ctx.moveTo(33, -35); ctx.quadraticCurveTo(41, -36.5, 47, -38 - wob); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(33, -33.6); ctx.quadraticCurveTo(41, -33.4, 47, -33.8 - wob * 0.5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(32.5, -36.4); ctx.quadraticCurveTo(39, -39, 44, -41.5 - wob); ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawObstacle(o, t){
+    var baseY = GROUND + 4;
+    // soft contact shadow for every obstacle
+    ctx.save();
+    ctx.fillStyle = "rgba(101,52,12,.24)";
+    ctx.beginPath(); ctx.ellipse(o.x + o.w / 2, baseY + 4, o.w * 0.55, 4.5, 0, 0, 6.29); ctx.fill();
+    ctx.restore();
+    ctx.save();
+    ctx.translate(o.x, baseY);
+    if (o.type === "rock"){
+      var rockG = ctx.createLinearGradient(0, -o.h, 0, 0);
+      rockG.addColorStop(0, "#9fb0bd"); rockG.addColorStop(0.5, "#6f8191"); rockG.addColorStop(1, "#4e5f6e");
+      ctx.fillStyle = rockG;
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(4, -o.h + 9); ctx.lineTo(15, -o.h - 1); ctx.lineTo(27, -o.h + 3);
+      ctx.lineTo(38, -o.h + 8); ctx.lineTo(o.w, -9); ctx.lineTo(o.w, 0); ctx.closePath(); ctx.fill();
+      // lit facet (sunset side) + dark facet + cracks
+      ctx.fillStyle = "rgba(255,196,130,.38)";
+      ctx.beginPath(); ctx.moveTo(15, -o.h - 1); ctx.lineTo(27, -o.h + 3); ctx.lineTo(24, -13); ctx.lineTo(11, -17); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(20,30,40,.22)";
+      ctx.beginPath(); ctx.moveTo(27, -o.h + 3); ctx.lineTo(38, -o.h + 8); ctx.lineTo(o.w, -9); ctx.lineTo(30, -8); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "rgba(30,40,50,.4)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(20, -20); ctx.lineTo(24, -11); ctx.moveTo(33, -16); ctx.lineTo(30, -9); ctx.stroke();
+      // moss / sand dusting at base
+      ctx.fillStyle = "rgba(232,178,102,.55)";
+      ctx.beginPath(); ctx.ellipse(o.w / 2, -1, o.w * 0.42, 3, 0, 0, 6.29); ctx.fill();
+    } else if (o.type === "crab"){
+      var wig = Math.sin(t * 10 + o.phase) * 1.8;
+      ctx.translate(0, wig * 0.3);
+      ctx.strokeStyle = "#9c2a22"; ctx.lineWidth = 3.2; ctx.lineCap = "round";
+      for (var i = 0; i < 3; i++){
+        var lp = Math.sin(t * 14 + o.phase + i) * 1.4;
+        ctx.beginPath(); ctx.moveTo(10 + i * 6, -6); ctx.lineTo(3 + i * 6, 0 + lp * 0.3); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(38 - i * 6, -6); ctx.lineTo(45 - i * 6, 0 - lp * 0.3); ctx.stroke();
+      }
+      // claws with gradient + highlight + notch
+      var clawG = ctx.createRadialGradient(-2, -22, 1, 2, -18, 10);
+      clawG.addColorStop(0, "#ff8a7a"); clawG.addColorStop(1, "#c22f28");
+      ctx.fillStyle = clawG;
+      ctx.beginPath(); ctx.arc(2, -18 + wig, 8.5, 0, 6.29); ctx.fill();
+      ctx.beginPath(); ctx.arc(52, -18 - wig, 8.5, 0, 6.29); ctx.fill();
+      ctx.fillStyle = "#f7e8d5";
+      ctx.beginPath(); ctx.moveTo(7, -24 + wig); ctx.lineTo(11, -21 + wig); ctx.lineTo(6, -19 + wig); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(47, -24 - wig); ctx.lineTo(43, -21 - wig); ctx.lineTo(48, -19 - wig); ctx.closePath(); ctx.fill();
+      // shell: domed gradient + segment lines + speckles
+      var shellG = ctx.createRadialGradient(22, -18, 2, 27, -11, 24);
+      shellG.addColorStop(0, "#ff7a66"); shellG.addColorStop(0.6, "#e14a3c"); shellG.addColorStop(1, "#b02a22");
+      ctx.fillStyle = shellG;
+      ctx.beginPath(); ctx.ellipse(27, -11, 21.5, 11, 0, 0, 6.29); ctx.fill();
+      ctx.strokeStyle = "rgba(120,20,14,.4)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.ellipse(27, -12, 14, 7, 0, 3.4, 6.0); ctx.stroke();
+      ctx.fillStyle = "rgba(255,220,190,.5)";
+      ctx.beginPath(); ctx.arc(18, -15, 1.1, 0, 6.29); ctx.arc(33, -17, 0.9, 0, 6.29); ctx.arc(27, -9, 1, 0, 6.29); ctx.fill();
+      // eyes on stalks, glossy
+      ctx.strokeStyle = "#9c2a22"; ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.moveTo(20, -19); ctx.lineTo(19, -26); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(34, -19); ctx.lineTo(35, -26); ctx.stroke();
+      ctx.fillStyle = "#1c0f08";
+      ctx.beginPath(); ctx.arc(19, -27.5, 3, 0, 6.29); ctx.arc(35, -27.5, 3, 0, 6.29); ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(20, -28.5, 1, 0, 6.29); ctx.arc(36, -28.5, 1, 0, 6.29); ctx.fill();
+    } else { // driftwood — weathered log with rings + grain
+      var woodG = ctx.createLinearGradient(0, -24, 0, 0);
+      woodG.addColorStop(0, "#b08a5c"); woodG.addColorStop(0.55, "#8a6844"); woodG.addColorStop(1, "#684626");
+      ctx.fillStyle = woodG;
+      ctx.beginPath();
+      var r = 11;
+      ctx.moveTo(2, -2); ctx.lineTo(2, -2 - r + 3);
+      ctx.quadraticCurveTo(2, -2 - r - 3, 12, -2 - r - 2);
+      ctx.lineTo(o.w - 10, -2 - r - 4);
+      ctx.quadraticCurveTo(o.w, -2 - r - 2, o.w, -8);
+      ctx.lineTo(o.w, -2); ctx.closePath(); ctx.fill();
+      // cut end with growth rings
+      var endG = ctx.createRadialGradient(o.w - 4, -8, 0.5, o.w - 4, -8, 6.5);
+      endG.addColorStop(0, "#e8c99a"); endG.addColorStop(0.6, "#c49a66"); endG.addColorStop(1, "#8a6844");
+      ctx.fillStyle = endG;
+      ctx.beginPath(); ctx.ellipse(o.w - 4, -8, 4.6, 6.2, 0, 0, 6.29); ctx.fill();
+      ctx.strokeStyle = "rgba(90,58,26,.55)"; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.ellipse(o.w - 4, -8, 2.4, 3.4, 0, 0, 6.29); ctx.stroke();
+      // long grain + a crack
+      ctx.strokeStyle = "rgba(62,38,14,.55)"; ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.moveTo(7, -7.5); ctx.quadraticCurveTo(30, -9.5, o.w - 14, -10); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(9, -13.5); ctx.quadraticCurveTo(28, -15, o.w - 18, -15.5); ctx.stroke();
+      ctx.strokeStyle = "rgba(40,24,8,.6)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(18, -4); ctx.lineTo(26, -10); ctx.lineTo(24, -16); ctx.stroke();
+      // sun-bleached top highlight
+      ctx.strokeStyle = "rgba(255,220,160,.5)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(10, -21); ctx.lineTo(o.w - 16, -22.5); ctx.stroke();
+      ctx.fillStyle = "#7a5836";
+      ctx.beginPath(); ctx.moveTo(28, -20); ctx.lineTo(36, -31); ctx.lineTo(41.5, -28.5); ctx.lineTo(36, -18); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawCloud(cx, cy, sc, warm){
+    ctx.save(); ctx.translate(cx, cy); ctx.scale(sc, sc);
+    // warm-lit underside first, then bright tops
+    ctx.fillStyle = "rgba(255,166,110,.55)";
+    ctx.beginPath();
+    ctx.ellipse(2, 5, 34, 10, 0, 0, 6.29); ctx.ellipse(24, 7, 24, 8, 0, 0, 6.29); ctx.ellipse(-24, 7, 22, 7.5, 0, 0, 6.29);
+    ctx.fill();
+    ctx.fillStyle = warm ? "rgba(255,246,235,.92)" : "rgba(255,255,255,.9)";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 30, 11, 0, 0, 6.29); ctx.ellipse(20, 2, 22, 8.5, 0, 0, 6.29);
+    ctx.ellipse(-21, 2, 20, 8, 0, 0, 6.29); ctx.ellipse(4, -6, 18, 8, 0, 0, 6.29);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawScene(t){
+    // Sky — smooth multi-stop sunset: deep blue → azure → peach → amber horizon
+    var sky = ctx.createLinearGradient(0, 0, 0, 244);
+    sky.addColorStop(0, "#174e82");
+    sky.addColorStop(0.22, "#2f74b4");
+    sky.addColorStop(0.44, "#6faddd");
+    sky.addColorStop(0.62, "#bcd9ea");
+    sky.addColorStop(0.76, "#f9cf8e");
+    sky.addColorStop(0.90, "#ffb066");
+    sky.addColorStop(1, "#ff8a4d");
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, 246);
+    // faint high haze bands
+    ctx.fillStyle = "rgba(255,190,130,.10)"; ctx.fillRect(0, 150, W, 26);
+    ctx.fillStyle = "rgba(255,255,255,.07)"; ctx.fillRect(0, 84, W, 18);
+
+    // Sun, low over the sea — layered glow + hot core
+    var sunX = W * 0.68, sunY = 212;
+    var glow = ctx.createRadialGradient(sunX, sunY, 6, sunX, sunY, 165);
+    glow.addColorStop(0, "rgba(255,224,140,.95)");
+    glow.addColorStop(0.25, "rgba(255,190,95,.55)");
+    glow.addColorStop(0.6, "rgba(255,150,70,.20)");
+    glow.addColorStop(1, "rgba(255,140,60,0)");
+    ctx.fillStyle = glow; ctx.fillRect(sunX - 175, sunY - 175, 350, 350);
+    var sunG = ctx.createRadialGradient(sunX - 8, sunY - 10, 2, sunX, sunY, 37);
+    sunG.addColorStop(0, "#fff6d8"); sunG.addColorStop(0.55, "#ffe08a"); sunG.addColorStop(1, "#ffb84d");
+    ctx.fillStyle = sunG;
+    ctx.beginPath(); ctx.arc(sunX, sunY, 36, 0, 6.29); ctx.fill();
+
+    // Volumetric clouds, warm underneath, drifting slowly
+    var clouds = [[92, 50, 1, true], [322, 32, 0.72, false], [548, 62, 0.9, true], [668, 36, 0.6, false], [205, 92, 0.5, true]];
+    for (var ci = 0; ci < clouds.length; ci++){
+      var cx2 = ((clouds[ci][0] - (game.scroll * 0.05 + t * 3.5)) % (W + 190) + W + 190) % (W + 190) - 95;
+      drawCloud(cx2, clouds[ci][1], clouds[ci][2], clouds[ci][3]);
+    }
+    // distant birds
+    ctx.strokeStyle = "rgba(28,52,78,.55)"; ctx.lineWidth = 1.5; ctx.lineCap = "round";
+    var birdOff = Math.sin(t * 0.7) * 3;
+    [[150, 66], [172, 58], [196, 70]].forEach(function(b, bi){
+      var by = b[1] + Math.sin(t * 2.2 + bi * 1.4) * 1.6 + birdOff * 0.3;
+      ctx.beginPath(); ctx.moveTo(b[0] - 5, by); ctx.quadraticCurveTo(b[0] - 1.5, by - 3.4, b[0], by); ctx.quadraticCurveTo(b[0] + 1.5, by - 3.4, b[0] + 5, by); ctx.stroke();
+    });
+
+    // Sea — deep teal-blue with a bright sun column
+    var sea = ctx.createLinearGradient(0, 238, 0, 296);
+    sea.addColorStop(0, "#f0914f");
+    sea.addColorStop(0.14, "#c97a52");
+    sea.addColorStop(0.34, "#2e7fa8");
+    sea.addColorStop(1, "#0f5f83");
+    ctx.fillStyle = sea; ctx.fillRect(0, 238, W, 58);
+    // shimmering reflection column (broken, animated)
+    for (var g = 0; g < 16; g++){
+      var gy = 241 + g * 3.4;
+      var spread = 14 + g * 5.2;
+      var gw2 = spread * (0.55 + 0.45 * Math.abs(Math.sin(t * 1.7 + g * 1.31)));
+      var gx = sunX - gw2 / 2 + Math.sin(t * 2.1 + g * 1.9) * (3 + g * 0.5);
+      ctx.strokeStyle = "rgba(255," + (206 - g * 3) + "," + (110 - g * 2) + "," + (0.85 - g * 0.04) + ")";
+      ctx.lineWidth = 2.1; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + gw2, gy); ctx.stroke();
+    }
+    // rolling wave lines + whitecaps scrolling with the run
+    for (var wv = 0; wv < 4; wv++){
+      var wy = 250 + wv * 11.5;
+      ctx.strokeStyle = "rgba(235,248,255," + (0.34 - wv * 0.05) + ")"; ctx.lineWidth = 1.7;
+      ctx.beginPath();
+      for (var px = 0; px <= W; px += 18){
+        var yy = wy + Math.sin((px + game.scroll * (0.28 + wv * 0.07)) / 24 + wv * 1.3 + t * 0.7) * 1.9;
+        if (px === 0) ctx.moveTo(px, yy); else ctx.lineTo(px, yy);
+      }
+      ctx.stroke();
+    }
+
+    // Sand — wet reflective band at the waterline, then warm dry sand with grain
+    var wet = ctx.createLinearGradient(0, 288, 0, 308);
+    wet.addColorStop(0, "#e9b978"); wet.addColorStop(1, "#dfa55e");
+    ctx.fillStyle = wet; ctx.fillRect(0, 288, W, 20);
+    ctx.fillStyle = "rgba(255,190,105,.28)"; // sun sheen on wet sand under the sun
+    ctx.fillRect(sunX - 62, 290, 124, 16);
+    var sand = ctx.createLinearGradient(0, 300, 0, H);
+    sand.addColorStop(0, "#f8d18d"); sand.addColorStop(0.5, "#f2bc6e"); sand.addColorStop(1, "#e69f4e");
+    ctx.fillStyle = sand; ctx.fillRect(0, 300, W, H - 300);
+    // lapping foam edge (two soft lines)
+    for (var fe = 0; fe < 2; fe++){
+      ctx.fillStyle = fe === 0 ? "rgba(255,255,255,.75)" : "rgba(255,255,255,.4)";
+      ctx.beginPath();
+      for (var fx = 0; fx <= W; fx += 14){
+        var fy = 292 + fe * 4.5 + Math.sin((fx + game.scroll * 0.5) / 28 + t * 0.9 + fe) * 2.2;
+        if (fx === 0) ctx.moveTo(fx, fy); else ctx.lineTo(fx, fy);
+      }
+      ctx.lineTo(W, 296 + fe * 4.5); ctx.lineTo(0, 296 + fe * 4.5); ctx.closePath(); ctx.fill();
+    }
+    // grain: varied speckles, pebbles + tiny shells scrolling with the run
+    for (var s2 = 0; s2 < 64; s2++){
+      var sx = ((s2 * 67 + (s2 % 5) * 23 - game.scroll * (0.85 + (s2 % 3) * 0.08)) % W + W) % W;
+      var sy = 308 + (s2 * 41) % 102;
+      var kind = s2 % 9;
+      if (kind === 0){ ctx.fillStyle = "rgba(255,246,225,.8)"; ctx.beginPath(); ctx.ellipse(sx, sy, 3.2, 2, 0.4, 0, 6.29); ctx.fill(); } // shell
+      else if (kind === 1){ ctx.fillStyle = "rgba(146,96,44,.5)"; ctx.beginPath(); ctx.arc(sx, sy, 1.9, 0, 6.29); ctx.fill(); } // pebble
+      else { ctx.fillStyle = (s2 % 2) ? "rgba(168,104,40,.32)" : "rgba(255,232,175,.5)"; ctx.fillRect(sx, sy, 3.6 + (s2 % 3), 1.7); }
+    }
+    // soft shadow pooling under the running line
+    var pool = ctx.createLinearGradient(0, GROUND - 4, 0, GROUND + 26);
+    pool.addColorStop(0, "rgba(140,80,20,0)"); pool.addColorStop(0.5, "rgba(140,80,20,.10)"); pool.addColorStop(1, "rgba(140,80,20,0)");
+    ctx.fillStyle = pool; ctx.fillRect(0, GROUND - 4, W, 30);
+
+    // Obstacles
+    for (var oi = 0; oi < game.obstacles.length; oi++) drawObstacle(game.obstacles[oi], t);
+
+    // Hamster (casts its own dynamic shadow)
+    drawHamster(118, game.hamY, t);
+  }
+
+  /* ---- Main loop ---- */
+  var lastTs = 0;
+  function loop(ts){
+    requestAnimationFrame(loop);
+    var t = ts / 1000;
+    var dt = Math.min(0.05, lastTs ? (ts - lastTs) / 1000 : 0.016);
+    lastTs = ts;
+
+    var paused = game.state === "playing" && !feedIsUp();
+    feedDownOverlay.classList.toggle("hidden", !paused);
+
+    if (game.state === "playing" && !paused){
+      var spd = speedPx();
+      game.scroll += spd * dt;
+      game.dist += (spd * dt) / 46; // px -> metres
+      game.runTime += dt;
+
+      // Hamster physics
+      if (!game.grounded){
+        game.vy += 2300 * dt;
+        game.hamY += game.vy * dt;
+        if (game.hamY >= GROUND){ game.hamY = GROUND; game.vy = 0; game.grounded = true; }
+      }
+
+      // Spawn
+      game.spawnIn -= dt * 1000;
+      if (game.spawnIn <= 0){
+        spawnObstacle();
+        var base = 1250 - Math.min(450, effectiveRpm() * 9);
+        game.spawnIn = base + Math.random() * 620;
+      }
+
+      // Move + collide
+      var hamBox = { x: 118 - 20, y: game.hamY - 52, w: 62, h: 52 };
+      for (var i = game.obstacles.length - 1; i >= 0; i--){
+        var o = game.obstacles[i];
+        o.x -= spd * dt;
+        if (o.x + o.w < -10){ game.obstacles.splice(i, 1); continue; }
+        var oBox = { x: o.x + 5, y: GROUND + 4 - o.h, w: o.w - 10, h: o.h - 3 };
+        if (hamBox.x < oBox.x + oBox.w && hamBox.x + hamBox.w > oBox.x &&
+            hamBox.y < oBox.y + oBox.h && hamBox.y + hamBox.h > oBox.y){
+          endRun();
+          break;
+        }
+      }
+      hudScore.textContent = Math.floor(game.dist) + " m";
+      if (simMode) hudSpeed.textContent = speedLabel();
+    }
+    drawScene(t);
+  }
+  requestAnimationFrame(loop);
+  renderFeed();
+})();
+</script>
+</body>
+</html>
